@@ -1,5 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { percentsSumTo100 } from "../lib/money.js";
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
 
 const CATEGORIES = ["Food", "Travel", "Fun", "Stay"];
 
@@ -17,12 +22,25 @@ export default function AddExpenseForm({ members, onAdd }) {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [paidBy, setPaidBy] = useState(members[0]?.id ?? "");
-  const [date, setDate] = useState("2026-03-16");
+  const [date, setDate] = useState(todayStr);
   const [category, setCategory] = useState("Food");
   const [splitType, setSplitType] = useState("equal");
   const [splitWith, setSplitWith] = useState(members.map((m) => m.id));
   const [percents, setPercents] = useState(evenPercents(members.map((m) => m.id)));
   const [error, setError] = useState("");
+
+  // Keep splitWith / percents in sync when the members list changes
+  useEffect(() => {
+    const memberIds = members.map((m) => m.id);
+    setSplitWith((prev) => {
+      // Add any new members that aren't already in splitWith
+      const added = memberIds.filter((id) => !prev.includes(id));
+      if (added.length === 0) return prev;
+      const next = [...prev, ...added];
+      setPercents(evenPercents(next));
+      return next;
+    });
+  }, [members]);
 
   const selected = useMemo(
     () => members.filter((m) => splitWith.includes(m.id)),
@@ -64,6 +82,16 @@ export default function AddExpenseForm({ members, onAdd }) {
       date: new Date(date),
       category,
     });
+
+    // Reset form after successful submission
+    const allIds = members.map((m) => m.id);
+    setDescription("");
+    setAmount("");
+    setDate(todayStr());
+    setSplitType("equal");
+    setSplitWith(allIds);
+    setPercents(evenPercents(allIds));
+    setError("");
   }
 
   return (

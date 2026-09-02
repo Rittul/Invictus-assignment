@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatMoney } from "../lib/money.js";
 import { dateValue, formatDate } from "../lib/format.js";
 
@@ -13,6 +13,11 @@ function initials(name) {
 
 function ExpenseRow({ expense, memberMap, onDelete, onSaveAmount }) {
   const [draft, setDraft] = useState(String(expense.amount));
+
+  // Re-sync draft when the expense amount changes externally
+  useEffect(() => {
+    setDraft(String(expense.amount));
+  }, [expense.amount]);
   const payer = memberMap[expense.paidBy];
 
   return (
