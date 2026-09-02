@@ -13,5 +13,6 @@ export function formatDate(date) {
 }
 
 export function dateValue(date) {
-  return date;
+  if (date instanceof Date) return date.getTime();
+  return new Date(date).getTime();
 }
